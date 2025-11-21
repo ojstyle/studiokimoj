@@ -4,29 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>친구 모임 정산표</title>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
+        /* 기존 스타일 유지 */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             margin: 0;
             padding: 20px;
             min-height: 100vh;
-            display: flex; /* Flexbox를 사용하여 컨텐츠를 중앙에 배치 */
+            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
         }
         
         .container {
-            width: 100%; /* 모바일에서 꽉 차도록 */
+            width: 100%;
             max-width: 800px;
-            margin: 20px auto; /* 상하 여백 추가 */
+            margin: 20px auto;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             backdrop-filter: blur(10px);
-            box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
+            box-sizing: border-box;
         }
         
         h1 {
@@ -38,7 +40,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            word-break: keep-all; /* 긴 제목이 넘치지 않도록 */
+            word-break: keep-all;
         }
         
         .section {
@@ -63,25 +65,25 @@
             gap: 15px;
             margin: 15px 0;
             align-items: center;
-            flex-wrap: wrap; /* 작은 화면에서 줄바꿈 */
+            flex-wrap: wrap;
         }
         
         .input-group label {
             font-weight: 600;
             color: #555;
             min-width: 100px;
-            flex-shrink: 0; /* 라벨이 줄어들지 않도록 */
+            flex-shrink: 0;
         }
         
         input[type="text"], input[type="number"], select {
-            flex-grow: 1; /* 입력 필드가 가능한 공간을 채우도록 */
+            flex-grow: 1;
             padding: 12px 15px;
             border: 2px solid #e1e5e9;
             border-radius: 10px;
             font-size: 16px;
             transition: all 0.3s ease;
             background: #fafbfc;
-            min-width: 0; /* flex 아이템의 최소 너비 설정 */
+            min-width: 0;
         }
         
         input[type="text"]:focus, input[type="number"]:focus, select:focus {
@@ -102,13 +104,19 @@
             font-weight: 600;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-            width: auto; /* 기본 너비 설정 제거 */
-            flex-shrink: 0; /* 버튼이 줄어들지 않도록 */
+            width: auto;
+            flex-shrink: 0;
         }
         
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .save-btn {
+            background: linear-gradient(45deg, #11998e, #38ef7d);
+            width: 100%;
+            margin-top: 15px;
         }
         
         .person-item, .activity-item {
@@ -121,12 +129,12 @@
             justify-content: space-between;
             align-items: center;
             transition: all 0.3s ease;
-            flex-wrap: wrap; /* 작은 화면에서 줄바꿈 */
-            gap: 10px; /* 아이템 간격 */
+            flex-wrap: wrap;
+            gap: 10px;
         }
         
         .activity-item {
-             border-left: 4px solid #764ba2; /* 활동 아이템 색상 구분 */
+             border-left: 4px solid #764ba2;
         }
 
         .person-item:hover, .activity-item:hover {
@@ -136,476 +144,8 @@
         
         .person-info {
             flex: 1;
-            min-width: 150px; /* 정보가 너무 좁아지지 않도록 */
+            min-width: 150px;
         }
         
         .person-name {
-            font-weight: bold;
-            color: #333;
-            font-size: 1.1em;
-        }
-        
-        .person-participation {
-            color: #666;
-            font-size: 0.9em;
-            margin-top: 5px;
-            word-break: break-word; /* 긴 텍스트 줄바꿈 */
-        }
-        
-        .person-amount {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #667eea;
-            text-align: right;
-            flex-shrink: 0; /* 금액이 줄어들지 않도록 */
-        }
-        
-        .total-section {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            text-align: center;
-            padding: 25px;
-            border-radius: 15px; /* 컨테이너와 동일한 둥근 모서리 */
-            margin-top: 20px; /* 위쪽 여백 */
-        }
-        
-        .total-amount {
-            font-size: 2em;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        
-        .remove-btn {
-            background: #ff4757;
-            padding: 8px 15px;
-            font-size: 14px;
-            margin-left: 10px;
-            box-shadow: none; /* 제거 버튼은 그림자 제거 */
-        }
-        
-        .remove-btn:hover {
-            background: #ff3742;
-            transform: none; /* 제거 버튼은 변형 효과 제거 */
-        }
-        
-        /* 활동 추가 섹션의 입력 필드 */
-        .activity-item input[type="text"] {
-            flex: 2; /* 활동명은 더 넓게 */
-        }
-        .activity-item input[type="number"] {
-            flex: 1; /* 비용은 더 좁게 */
-        }
-
-        #participationCheckboxes {
-            flex-basis: 100%; /* 체크박스 컨테이너는 한 줄 전체 사용 */
-            margin-top: 10px;
-        }
-        #participationCheckboxes label {
-            min-width: unset; /* 라벨 최소 너비 해제 */
-            margin-bottom: 8px; /* 체크박스 간 간격 */
-        }
-
-        /* 결과 목록 컨테이너 스크롤 */
-        #resultsList, #activitiesList {
-            max-height: 300px; /* 일정 높이 이상이면 스크롤 */
-            overflow-y: auto;
-            padding-right: 10px; /* 스크롤바 공간 확보 */
-        }
-        #resultsList::-webkit-scrollbar, #activitiesList::-webkit-scrollbar {
-            width: 8px;
-        }
-        #resultsList::-webkit-scrollbar-track, #activitiesList::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        #resultsList::-webkit-scrollbar-thumb, #activitiesList::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 10px;
-        }
-        #resultsList::-webkit-scrollbar-thumb:hover, #activitiesList::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-
-
-        /* 모바일 최적화 미디어 쿼리 */
-        @media (max-width: 768px) { /* 태블릿과 모바일 모두 포함 */
-            body {
-                padding: 10px; /* 전체 패딩 줄이기 */
-                justify-content: flex-start; /* 상단부터 채우도록 */
-            }
-            .container {
-                margin: 10px auto; /* 상하 여백 줄이기 */
-                padding: 20px; /* 컨테이너 패딩 줄이기 */
-                border-radius: 15px; /* 모서리 둥글기 줄이기 */
-            }
-            h1 {
-                font-size: 1.8em; /* 제목 폰트 크기 줄이기 */
-                margin-bottom: 20px;
-            }
-            .section {
-                padding: 15px; /* 섹션 패딩 줄이기 */
-                margin: 15px 0; /* 섹션 마진 줄이기 */
-                border-radius: 10px; /* 섹션 모서리 둥글기 줄이기 */
-            }
-            .section h2 {
-                font-size: 1.2em; /* 섹션 제목 폰트 크기 줄이기 */
-                margin-bottom: 15px;
-            }
-            .input-group {
-                flex-direction: column; /* 입력 그룹 세로 정렬 */
-                align-items: stretch; /* 늘려서 채우도록 */
-                gap: 10px; /* 간격 줄이기 */
-            }
-            .input-group label {
-                min-width: auto; /* 라벨 최소 너비 해제 */
-                text-align: left; /* 라벨 왼쪽 정렬 */
-            }
-            input[type="text"], input[type="number"], select {
-                padding: 10px 12px; /* 입력 필드 패딩 줄이기 */
-                font-size: 15px; /* 폰트 사이즈 줄이기 */
-            }
-            button {
-                width: 100%; /* 버튼 너비 100% */
-                padding: 10px 20px; /* 버튼 패딩 줄이기 */
-                font-size: 15px; /* 버튼 폰트 사이즈 줄이기 */
-                margin-top: 5px; /* 버튼 위 여백 */
-            }
-
-            .activity-item, .person-item {
-                flex-direction: column; /* 아이템 세로 정렬 */
-                align-items: stretch; /* 늘려서 채우도록 */
-                gap: 8px; /* 간격 줄이기 */
-                padding: 12px; /* 아이템 패딩 줄이기 */
-            }
-
-            .person-info, .activity-item span {
-                flex: none; /* flexgrow 해제 */
-                width: 100%; /* 너비 100% */
-                text-align: left; /* 텍스트 왼쪽 정렬 */
-            }
-
-            .person-amount {
-                text-align: left; /* 금액 왼쪽 정렬 */
-                font-size: 1.1em; /* 금액 폰트 사이즈 줄이기 */
-            }
-
-            .remove-btn {
-                width: 100%; /* 제거 버튼 너비 100% */
-                margin-left: 0; /* 왼쪽 마진 제거 */
-                margin-top: 10px; /* 위 여백 추가 */
-            }
-            .activity-item input {
-                flex: none;
-                width: 100%;
-            }
-
-            #hostInfoDisplay {
-                padding: 15px;
-            }
-            #hostInfoDisplay h3 {
-                font-size: 1.2em;
-            }
-            #hostInfoDisplay div {
-                font-size: 1em;
-            }
-            #displayAccountNumber {
-                font-size: 1.1em;
-                padding: 10px;
-            }
-            .total-section {
-                padding: 20px;
-            }
-            .total-amount {
-                font-size: 1.8em;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>💰 오제이의 엔빵 계산기</h1>
-        
-        <div class="section">
-            <h2>🏦 주최자 정보</h2>
-            <div class="input-group">
-                <label for="hostName">주최자 이름:</label>
-                <input type="text" id="hostName" placeholder="주최자 이름 입력">
-            </div>
-            <div class="input-group">
-                <label for="bankName">은행명:</label>
-                <input type="text" id="bankName" placeholder="예: 국민은행, 신한은행">
-            </div>
-            <div class="input-group">
-                <label for="accountNumber">계좌번호:</label>
-                <input type="text" id="accountNumber" placeholder="계좌번호 입력">
-            </div>
-            <button onclick="updateHostInfo()">주최자 정보 저장</button>
-        </div>
-        
-        <div class="section">
-            <h2>📝 활동 추가</h2>
-            <div class="activity-item">
-                <input type="text" id="activityName" placeholder="활동명 (예: 1차 술집, 2차 노래방)">
-                <input type="number" id="activityCost" placeholder="총 비용">
-                <button onclick="addActivity()">추가</button>
-            </div>
-            <div id="activitiesList"></div>
-        </div>
-        
-        <div class="section">
-            <h2>👥 참가자 추가</h2>
-            <div class="input-group">
-                <label for="personName">이름:</label>
-                <input type="text" id="personName" placeholder="참가자 이름">
-            </div>
-            <div class="input-group">
-                <label>참여 활동:</label>
-                <div id="participationCheckboxes">
-                    <p>먼저 활동을 추가해주세요!</p>
-                </div>
-            </div>
-            <button onclick="addPerson()">참가자 추가</button>
-        </div>
-        
-        <div class="section">
-            <h2>💰 정산 결과</h2>
-            
-            <div id="summarySection" style="background: #f8f9ff; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #667eea; display: none;">
-                <div style="font-size: 1.1em; color: #333;">
-                    <strong>📊 총 내역:</strong> <span id="activitySummary" style="color: #667eea; font-weight: bold;"></span>
-                </div>
-            </div>
-            
-            <div id="hostInfoDisplay" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center; display: none;">
-                <h3 style="margin: 0 0 15px 0; font-size: 1.3em;">💳 입금 정보</h3>
-                <div style="font-size: 1.1em; margin: 10px 0;">
-                    <strong>주최자:</strong> <span id="displayHostName">-</span>
-                </div>
-                <div style="font-size: 1.1em; margin: 10px 0;">
-                    <strong>은행:</strong> <span id="displayBankName">-</span>
-                </div>
-                <div style="font-size: 1.3em; margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 10px; font-family: monospace; letter-spacing: 1px;">
-                    <strong id="displayAccountNumber">계좌번호를 입력해주세요</strong>
-                </div>
-                <div style="font-size: 0.9em; opacity: 0.9; margin-top: 15px;">
-                    ✨ 위 계좌로 본인 금액을 입금해주세요!
-                </div>
-            </div>
-            <div id="resultsList"></div>
-            <div class="total-section">
-                <div>총 모임 비용</div>
-                <div class="total-amount" id="totalAmount">0원</div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let activities = [];
-        let people = [];
-        let hostInfo = { name: '', bank: '', account: '' };
-        
-        function updateHostInfo() {
-            const name = document.getElementById('hostName').value.trim();
-            const bank = document.getElementById('bankName').value.trim();
-            const account = document.getElementById('accountNumber').value.trim();
-            
-            if (!name || !bank || !account) {
-                alert('모든 주최자 정보를 입력해주세요!');
-                return;
-            }
-            
-            hostInfo = { name, bank, account };
-            updateHostInfoDisplay();
-            alert('주최자 정보가 저장되었습니다!');
-        }
-        
-        function updateHostInfoDisplay() {
-            const display = document.getElementById('hostInfoDisplay');
-            const nameEl = document.getElementById('displayHostName');
-            const bankEl = document.getElementById('displayBankName');
-            const accountEl = document.getElementById('displayAccountNumber');
-            
-            if (hostInfo.name && hostInfo.bank && hostInfo.account) {
-                display.style.display = 'block';
-                nameEl.textContent = hostInfo.name;
-                bankEl.textContent = hostInfo.bank;
-                accountEl.textContent = hostInfo.account;
-            } else {
-                display.style.display = 'none';
-            }
-        }
-        
-        function addActivity() {
-            const name = document.getElementById('activityName').value.trim();
-            const cost = parseInt(document.getElementById('activityCost').value) || 0;
-            
-            if (!name || cost <= 0) {
-                alert('활동명과 비용을 올바르게 입력해주세요!');
-                return;
-            }
-            
-            activities.push({ name, cost });
-            updateActivitiesList();
-            updateParticipationCheckboxes();
-            calculateResults(); // 활동 추가 시 결과도 바로 업데이트
-            
-            document.getElementById('activityName').value = '';
-            document.getElementById('activityCost').value = '';
-        }
-        
-        function removeActivity(index) {
-            activities.splice(index, 1);
-            // 제거된 활동에 참여한 사람들의 활동 목록 업데이트
-            people.forEach(person => {
-                person.activities = person.activities.filter(activityIndex => activityIndex !== index)
-                                                     .map(activityIndex => activityIndex > index ? activityIndex - 1 : activityIndex);
-            });
-            updateActivitiesList();
-            updateParticipationCheckboxes();
-            calculateResults();
-        }
-        
-        function updateActivitiesList() {
-            const list = document.getElementById('activitiesList');
-            if (activities.length === 0) {
-                list.innerHTML = '<p style="color:#777; text-align:center;">아직 추가된 활동이 없습니다.</p>';
-                return;
-            }
-            list.innerHTML = activities.map((activity, index) => `
-                <div class="activity-item">
-                    <span style="flex: 2; font-weight: bold;">${activity.name}</span>
-                    <span style="flex: 1; text-align: right; font-weight: bold; color: #667eea;">${activity.cost.toLocaleString()}원</span>
-                    <button class="remove-btn" onclick="removeActivity(${index})">삭제</button>
-                </div>
-            `).join('');
-        }
-        
-        function updateParticipationCheckboxes() {
-            const container = document.getElementById('participationCheckboxes');
-            if (activities.length === 0) {
-                container.innerHTML = '<p style="color:#777;">먼저 활동을 추가해주세요!</p>';
-                return;
-            }
-            
-            container.innerHTML = activities.map((activity, index) => `
-                <label style="display: flex; align-items: center; margin: 8px 0; cursor: pointer;">
-                    <input type="checkbox" id="activity_${index}" style="margin-right: 10px; transform: scale(1.2);">
-                    <span style="flex:1;">${activity.name} (<span style="color: #667eea; font-weight: bold;">${activity.cost.toLocaleString()}원</span>)</span>
-                </label>
-            `).join('');
-        }
-        
-        function addPerson() {
-            const name = document.getElementById('personName').value.trim();
-            if (!name) {
-                alert('이름을 입력해주세요!');
-                return;
-            }
-            
-            if (activities.length === 0) {
-                alert('먼저 활동을 추가해주세요!');
-                return;
-            }
-            
-            const participatingActivities = [];
-            activities.forEach((_, index) => {
-                const checkbox = document.getElementById(`activity_${index}`);
-                if (checkbox && checkbox.checked) {
-                    participatingActivities.push(index);
-                }
-            });
-            
-            if (participatingActivities.length === 0) {
-                alert('최소 하나의 활동에는 참여해야 합니다!');
-                return;
-            }
-            
-            people.push({ name, activities: participatingActivities });
-            calculateResults();
-            
-            document.getElementById('personName').value = '';
-            activities.forEach((_, index) => {
-                const checkbox = document.getElementById(`activity_${index}`);
-                if (checkbox) checkbox.checked = false;
-            });
-        }
-        
-        function removePerson(index) {
-            people.splice(index, 1);
-            calculateResults();
-        }
-        
-        function calculateResults() {
-            const resultsList = document.getElementById('resultsList');
-            const totalAmountEl = document.getElementById('totalAmount');
-            const summarySection = document.getElementById('summarySection');
-            const activitySummary = document.getElementById('activitySummary');
-            
-            // 간단한 총 내역 표시
-            if (activities.length > 0) {
-                summarySection.style.display = 'block';
-                const summaryText = activities.map(activity => 
-                    `${activity.name}: ${activity.cost.toLocaleString()}원`
-                ).join(' / ');
-                activitySummary.textContent = summaryText;
-            } else {
-                summarySection.style.display = 'none';
-            }
-            
-            if (people.length === 0) {
-                resultsList.innerHTML = '<p style="color:#777; text-align:center;">참가자를 추가해주세요!</p>';
-                totalAmountEl.textContent = '0원';
-                return;
-            }
-            
-            let calculatedTotal = 0;
-            const personCosts = people.map(person => {
-                let totalCost = 0;
-                const participationDetails = [];
-                
-                person.activities.forEach(activityIndex => {
-                    const activity = activities[activityIndex];
-                    if (activity) { // 활동이 삭제되었을 경우를 대비한 체크
-                        const participantCount = people.filter(p => p.activities.includes(activityIndex)).length;
-                        const individualCost = Math.round(activity.cost / participantCount);
-                        totalCost += individualCost;
-                        participationDetails.push(`${activity.name}(${individualCost.toLocaleString()}원)`);
-                    }
-                });
-                
-                calculatedTotal += totalCost;
-                return { 
-                    ...person, 
-                    cost: totalCost,
-                    participationDetails: participationDetails
-                };
-            });
-            
-            resultsList.innerHTML = personCosts.map((person, index) => `
-                <div class="person-item">
-                    <div class="person-info">
-                        <div class="person-name">${person.name}</div>
-                        <div class="person-participation">
-                            참여: ${person.participationDetails.length > 0 ? person.participationDetails.map(detail => 
-                                `<span style="color: #667eea; font-weight: bold;">${detail}</span>`
-                            ).join(', ') : '<span style="color: #ff4757;">(참여 활동 없음)</span>'}
-                        </div>
-                    </div>
-                    <div class="person-amount">${person.cost.toLocaleString()}원</div>
-                    <button class="remove-btn" onclick="removePerson(${index})">삭제</button>
-                </div>
-            `).join('');
-            
-            totalAmountEl.textContent = `${calculatedTotal.toLocaleString()}원`;
-        }
-
-        // 페이지 로드 시 초기 목록 업데이트
-        document.addEventListener('DOMContentLoaded', () => {
-            updateActivitiesList();
-            updateParticipationCheckboxes();
-            calculateResults();
-            updateHostInfoDisplay();
-        });
-    </script>
-</body>
-</html>
+            font-weight: bold
