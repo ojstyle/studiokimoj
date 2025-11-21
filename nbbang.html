@@ -139,4 +139,490 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.3
+            transition: all 0.3s ease;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .activity-item { border-left: 4px solid #764ba2; }
+        
+        .person-info { flex: 1; min-width: 150px; }
+        .person-amount {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        
+        .total-section {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        .total-amount { font-size: 2em; font-weight: bold; margin: 10px 0; }
+        
+        .remove-btn {
+            background: #ff4757;
+            padding: 8px 15px;
+            font-size: 14px;
+            margin-left: 10px;
+            box-shadow: none;
+        }
+        
+        .activity-item input[type="text"] { flex: 2; }
+        .activity-item input[type="number"] { flex: 1; }
+
+        #activitiesList { max-height: 300px; overflow-y: auto; padding-right: 10px; }
+        #resultsList { max-height: none; overflow-y: visible; padding-right: 0; }
+
+        /* 은행 앱 버튼 스타일 */
+        .banking-apps {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .bank-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            color: #333;
+            background: white;
+            border: 1px solid #eee;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            flex: 1;
+            min-width: 80px;
+            transition: transform 0.2s;
+            text-decoration: none; /* 링크 스타일 제거 */
+        }
+        .bank-btn:hover { transform: translateY(-2px); background: #f0f0f0; }
+        .bank-btn.toss { color: #0064FF; font-weight: bold; border: 1px solid #e5e9f2; }
+        .bank-btn.kakao { color: #3C1E1E; background: #FAE100; border-color: #FAE100; font-weight: bold;}
+        .bank-btn.copy { background: #555; color: white; border-color: #555; }
+
+        /* 모바일 최적화 */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 20px; }
+            h1 { font-size: 1.8em; }
+            .input-group { flex-direction: column; align-items: stretch; gap: 10px; }
+            .input-group label { text-align: left; }
+            button { width: 100%; margin-top: 5px; }
+            .action-buttons { flex-direction: column; }
+            .activity-item, .person-item { flex-direction: column; align-items: stretch; }
+            .person-info, .person-amount { text-align: left; }
+            .remove-btn { width: 100%; margin-left: 0; margin-top: 10px; }
+            .activity-item input { width: 100%; }
+        }
+        
+        /* 공유된 링크로 들어왔을 때 수정 불가능하게 살짝 가리는 오버레이 (선택사항) */
+        .readonly-mode input, .readonly-mode .remove-btn {
+            pointer-events: none;
+            background-color: #eee;
+            color: #999;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 오제이의 엔빵 계산기</h1>
+        
+        <div class="section">
+            <h2>🏦 주최자 정보</h2>
+            <div class="input-group">
+                <label for="hostName">주최자 이름:</label>
+                <input type="text" id="hostName" placeholder="이름 입력">
+            </div>
+            <div class="input-group">
+                <label for="bankName">은행명:</label>
+                <input type="text" id="bankName" placeholder="예: 국민, 신한, 토스">
+            </div>
+            <div class="input-group">
+                <label for="accountNumber">계좌번호:</label>
+                <input type="number" id="accountNumber" placeholder="숫자만 입력">
+            </div>
+            <button onclick="updateHostInfo()">주최자 정보 저장</button>
+        </div>
+        
+        <div class="section">
+            <h2>📝 활동 추가</h2>
+            <div class="activity-item">
+                <input type="text" id="activityName" placeholder="활동명 (예: 1차, 2차)">
+                <input type="number" id="activityCost" placeholder="비용">
+                <button onclick="addActivity()">추가</button>
+            </div>
+            <div id="activitiesList"></div>
+        </div>
+        
+        <div class="section">
+            <h2>👥 참가자 추가</h2>
+            <div class="input-group">
+                <label for="personName">이름:</label>
+                <input type="text" id="personName" placeholder="참가자 이름">
+            </div>
+            <div class="input-group">
+                <label>참여 활동:</label>
+                <div id="participationCheckboxes" style="flex-basis: 100%; margin-top: 10px;">
+                    <p style="color:#777;">먼저 활동을 추가해주세요!</p>
+                </div>
+            </div>
+            <button onclick="addPerson()">참가자 추가</button>
+        </div>
+        
+        <div class="section">
+            <h2>💰 정산 결과</h2>
+            
+            <div id="captureArea" style="background:white; padding:10px; border-radius:10px;">
+                <div id="summarySection" style="background: #f8f9ff; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #667eea; display: none;">
+                    <div style="font-size: 1.1em; color: #333;">
+                        <strong>📊 총 내역:</strong> <span id="activitySummary" style="color: #667eea; font-weight: bold;"></span>
+                    </div>
+                </div>
+                
+                <div id="hostInfoDisplay" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center; display: none;">
+                    <h3 style="margin: 0 0 15px 0; font-size: 1.3em;">💳 입금 정보</h3>
+                    <div style="margin: 10px 0;">
+                        <strong>주최자:</strong> <span id="displayHostName">-</span> / 
+                        <strong>은행:</strong> <span id="displayBankName">-</span>
+                    </div>
+                    <div style="font-size: 1.3em; margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 10px; font-family: monospace;">
+                        <strong id="displayAccountNumber">계좌번호</strong>
+                    </div>
+                    
+                    <div class="banking-apps" data-html2canvas-ignore="true">
+                        <button class="bank-btn copy" onclick="copyAccount()">📋 복사</button>
+                        <button class="bank-btn toss" onclick="copyAndOpen('toss')">Toss 열기</button>
+                        <button class="bank-btn kakao" onclick="copyAndOpen('kakao')">카카오뱅크</button>
+                    </div>
+
+                    <div style="font-size: 0.9em; opacity: 0.9; margin-top: 15px;">
+                        ✨ 위 버튼을 눌러 바로 송금하세요!
+                    </div>
+                </div>
+                
+                <div id="resultsList"></div>
+                
+                <div class="total-section">
+                    <div>총 모임 비용</div>
+                    <div class="total-amount" id="totalAmount">0원</div>
+                </div>
+                
+                <div id="captureFooter" style="display:none; text-align:center; margin-top:20px; color:#888; font-size:0.8em;">
+                    오제이의 엔빵 계산기 결과
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button class="share-link-btn" onclick="generateShareLink()">🔗 정산 링크 복사하기</button>
+                <button class="save-btn" onclick="saveAsImage()">📸 이미지로 저장하기</button>
+            </div>
+            <p style="text-align:center; color:#888; font-size:0.8em; margin-top:10px;">
+                * '정산 링크'를 공유하면 친구들이 이 내용을 바로 볼 수 있습니다.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // 데이터 변수
+        let activities = [];
+        let people = [];
+        let hostInfo = { name: '', bank: '', account: '' };
+        
+        // -------------------------------------------------------
+        // ★ 핵심 기능: URL 공유 및 복구 ★
+        // -------------------------------------------------------
+        
+        // 1. 현재 상태를 압축해서 URL 링크로 생성 및 복사
+        function generateShareLink() {
+            if(activities.length === 0 && people.length === 0) {
+                alert("공유할 데이터가 없습니다!");
+                return;
+            }
+
+            // 데이터를 객체로 묶음
+            const allData = {
+                h: hostInfo, // h: hostInfo 줄임
+                a: activities, // a: activities
+                p: people // p: people
+            };
+
+            // JSON 문자열로 변환 후 URL 인코딩
+            try {
+                const jsonString = JSON.stringify(allData);
+                const encodedData = encodeURIComponent(jsonString);
+                
+                // 현재 페이지 주소 + ?data=암호화된데이터
+                const shareUrl = `${window.location.origin}${window.location.pathname}?data=${encodedData}`;
+                
+                // 클립보드 복사
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert("🔗 링크가 복사되었습니다!\n\n카카오톡 등에 붙여넣기(Ctrl+V)하여 공유하세요.\n친구들이 링크를 클릭하면 이 내용 그대로 보입니다.");
+                }).catch(() => {
+                    // 복사 실패시(보안상 이유 등) 수동 창 띄우기
+                    prompt("아래 링크를 복사해서 공유하세요:", shareUrl);
+                });
+
+            } catch (e) {
+                console.error(e);
+                alert("링크 생성 중 오류가 발생했습니다.");
+            }
+        }
+
+        // 2. 페이지 로드 시 URL에 데이터가 있는지 확인하고 복구
+        function checkUrlForData() {
+            const params = new URLSearchParams(window.location.search);
+            const dataStr = params.get('data');
+
+            if (dataStr) {
+                try {
+                    // 데이터 복호화 및 파싱
+                    const decodedString = decodeURIComponent(dataStr);
+                    const loadedData = JSON.parse(decodedString);
+
+                    // 데이터 복구
+                    if(loadedData.h) hostInfo = loadedData.h;
+                    if(loadedData.a) activities = loadedData.a;
+                    if(loadedData.p) people = loadedData.p;
+
+                    // 화면(UI)에 값 채워넣기
+                    document.getElementById('hostName').value = hostInfo.name || '';
+                    document.getElementById('bankName').value = hostInfo.bank || '';
+                    document.getElementById('accountNumber').value = hostInfo.account || '';
+                    
+                    // 화면 갱신 함수들 호출
+                    updateHostInfoDisplay();
+                    updateActivitiesList();
+                    updateParticipationCheckboxes();
+                    calculateResults();
+
+                    alert("공유받은 정산 내역을 불러왔습니다! 💰");
+
+                } catch (e) {
+                    console.error(e);
+                    alert("링크 데이터가 손상되어 불러올 수 없습니다.");
+                }
+            }
+        }
+
+        // -------------------------------------------------------
+        // 기존 기능들
+        // -------------------------------------------------------
+
+        function updateHostInfo() {
+            const name = document.getElementById('hostName').value.trim();
+            const bank = document.getElementById('bankName').value.trim();
+            const account = document.getElementById('accountNumber').value.trim();
+            
+            if (!name || !bank || !account) {
+                alert('주최자 정보를 모두 입력해주세요!');
+                return;
+            }
+            hostInfo = { name, bank, account };
+            updateHostInfoDisplay();
+            alert('저장되었습니다!');
+        }
+        
+        function updateHostInfoDisplay() {
+            const display = document.getElementById('hostInfoDisplay');
+            if (hostInfo.name && hostInfo.bank && hostInfo.account) {
+                display.style.display = 'block';
+                document.getElementById('displayHostName').textContent = hostInfo.name;
+                document.getElementById('displayBankName').textContent = hostInfo.bank;
+                document.getElementById('displayAccountNumber').textContent = hostInfo.account;
+            } else {
+                display.style.display = 'none';
+            }
+        }
+
+        // 계좌 복사
+        function copyAccount() {
+            if (!hostInfo.account) return alert("계좌번호가 없습니다.");
+            const temp = document.createElement("textarea");
+            temp.value = hostInfo.account;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand("copy");
+            document.body.removeChild(temp);
+            alert("계좌번호가 복사되었습니다!");
+        }
+
+        // 앱 열기
+        function copyAndOpen(app) {
+            if (!hostInfo.account) return alert("계좌번호가 없습니다.");
+            
+            copyAccount(); // 1. 복사
+
+            setTimeout(() => { // 2. 앱 실행
+                if (app === 'toss') {
+                    location.href = 'supertoss://';
+                } else if (app === 'kakao') {
+                    location.href = 'kakaobank://';
+                }
+            }, 500);
+        }
+        
+        function addActivity() {
+            const name = document.getElementById('activityName').value.trim();
+            const cost = parseInt(document.getElementById('activityCost').value) || 0;
+            if (!name || cost <= 0) return alert('활동명과 비용을 입력해주세요!');
+            
+            activities.push({ name, cost });
+            updateActivitiesList();
+            updateParticipationCheckboxes();
+            calculateResults();
+            
+            document.getElementById('activityName').value = '';
+            document.getElementById('activityCost').value = '';
+        }
+        
+        function removeActivity(index) {
+            activities.splice(index, 1);
+            people.forEach(p => {
+                p.activities = p.activities.filter(i => i !== index).map(i => i > index ? i - 1 : i);
+            });
+            updateActivitiesList();
+            updateParticipationCheckboxes();
+            calculateResults();
+        }
+        
+        function updateActivitiesList() {
+            const list = document.getElementById('activitiesList');
+            if (activities.length === 0) {
+                list.innerHTML = '<p style="color:#777; text-align:center;">추가된 활동이 없습니다.</p>';
+                return;
+            }
+            list.innerHTML = activities.map((act, i) => `
+                <div class="activity-item">
+                    <span style="flex:2; font-weight:bold;">${act.name}</span>
+                    <span style="flex:1; text-align:right; color:#667eea; font-weight:bold;">${act.cost.toLocaleString()}원</span>
+                    <button class="remove-btn" onclick="removeActivity(${i})">삭제</button>
+                </div>
+            `).join('');
+        }
+        
+        function updateParticipationCheckboxes() {
+            const container = document.getElementById('participationCheckboxes');
+            if (activities.length === 0) {
+                container.innerHTML = '<p style="color:#777;">먼저 활동을 추가해주세요!</p>';
+                return;
+            }
+            container.innerHTML = activities.map((act, i) => `
+                <label style="display:flex; align-items:center; margin:8px 0; cursor:pointer;">
+                    <input type="checkbox" id="activity_${i}" style="margin-right:10px; transform:scale(1.2);">
+                    <span>${act.name} (${act.cost.toLocaleString()}원)</span>
+                </label>
+            `).join('');
+        }
+        
+        function addPerson() {
+            const name = document.getElementById('personName').value.trim();
+            if (!name) return alert('이름을 입력해주세요!');
+            if (activities.length === 0) return alert('활동을 먼저 추가해주세요!');
+            
+            const checkedActs = [];
+            activities.forEach((_, i) => {
+                if (document.getElementById(`activity_${i}`).checked) checkedActs.push(i);
+            });
+            if (checkedActs.length === 0) return alert('최소 하나의 활동에 참여해야 합니다.');
+            
+            people.push({ name, activities: checkedActs });
+            calculateResults();
+            
+            document.getElementById('personName').value = '';
+            activities.forEach((_, i) => document.getElementById(`activity_${i}`).checked = false);
+        }
+        
+        function removePerson(index) {
+            people.splice(index, 1);
+            calculateResults();
+        }
+        
+        function calculateResults() {
+            const resultsList = document.getElementById('resultsList');
+            const totalEl = document.getElementById('totalAmount');
+            const summarySec = document.getElementById('summarySection');
+            
+            if (activities.length > 0) {
+                summarySec.style.display = 'block';
+                document.getElementById('activitySummary').textContent = activities.map(a => `${a.name}:${a.cost.toLocaleString()}`).join(' / ');
+            } else {
+                summarySec.style.display = 'none';
+            }
+            
+            if (people.length === 0) {
+                resultsList.innerHTML = '<p style="color:#777; text-align:center;">참가자를 추가해주세요!</p>';
+                totalEl.textContent = '0원';
+                return;
+            }
+            
+            let grandTotal = 0;
+            const html = people.map((p, idx) => {
+                let myCost = 0;
+                const details = [];
+                p.activities.forEach(actIdx => {
+                    const act = activities[actIdx];
+                    if (act) {
+                        const count = people.filter(person => person.activities.includes(actIdx)).length;
+                        const splitCost = Math.floor(act.cost / count);
+                        myCost += splitCost;
+                        details.push(`${act.name}(${splitCost.toLocaleString()})`);
+                    }
+                });
+                grandTotal += myCost;
+                
+                return `
+                <div class="person-item">
+                    <div class="person-info">
+                        <div class="person-name">${p.name}</div>
+                        <div class="person-participation" style="font-size:0.85em; color:#666;">
+                            ${details.join(', ')}
+                        </div>
+                    </div>
+                    <div class="person-amount">${myCost.toLocaleString()}원</div>
+                    <button class="remove-btn" data-html2canvas-ignore="true" onclick="removePerson(${idx})">삭제</button>
+                </div>`;
+            }).join('');
+            
+            resultsList.innerHTML = html;
+            totalEl.textContent = grandTotal.toLocaleString() + '원';
+        }
+
+        function saveAsImage() {
+            const area = document.getElementById("captureArea");
+            const footer = document.getElementById("captureFooter");
+            footer.style.display = "block";
+            
+            html2canvas(area, { scale: 2, backgroundColor: "#ffffff", useCORS: true }).then(canvas => {
+                footer.style.display = "none";
+                const link = document.createElement("a");
+                link.download = '정산결과.png';
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            }).catch(() => {
+                alert("이미지 저장 실패");
+                footer.style.display = "none";
+            });
+        }
+        
+        // ★ 페이지 로드 시 실행 (URL 데이터 확인) ★
+        window.onload = function() {
+            // 1. 기본 리스트 렌더링 (빈 상태)
+            updateActivitiesList();
+            updateParticipationCheckboxes();
+            calculateResults();
+            updateHostInfoDisplay();
+
+            // 2. URL에 공유된 데이터가 있는지 확인하고 덮어쓰기
+            checkUrlForData();
+        };
+    </script>
+</body>
+</html>
